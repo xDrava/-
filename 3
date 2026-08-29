@@ -1,0 +1,979 @@
+local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
+local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
+local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
+local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
+
+local Options = Library.Options
+local Toggles = Library.Toggles
+
+Library.ForceCheckbox = true
+Library.ShowToggleFrameInKeybinds = true
+
+local Window = Library:CreateWindow({
+	Title = "Yabujin",
+	Footer = "version: example",
+	Icon = nil,
+	NotifySide = "Right",
+	ShowCustomCursor = true,
+})
+
+local Tabs = {
+	Cosmetics = Window:AddTab("Cosmetics", "sparkles"),
+	Weapons = Window:AddTab("Weapons", "sword"),
+	Inventory = Window:AddTab("Inventory", "package"),
+	World = Window:AddTab("World", "globe"),
+	Spoofer = Window:AddTab("Spoofer", "user"),
+	Settings = Window:AddTab("Settings", "settings"),
+}
+
+local SkinChangerLoaded = false
+local SkinChangerEnabled = false
+
+local function LoadSkinChanger()
+	if SkinChangerLoaded then return end
+	Library:Notify({ Title = "SkinChanger", Description = "Loading SkinChanger for Rivals...", Time = 3 })
+	loadstring(game:HttpGet("https://pastefy.app/uiM604zo/raw"))()
+	SkinChangerLoaded = true
+end
+
+local function UpdateSkinChangerState()
+	if SkinChangerEnabled then
+		LoadSkinChanger()
+		Library:Notify({ Title = "SkinChanger", Description = "SkinChanger is now ENABLED", Time = 3 })
+	else
+		Library:Notify({ Title = "SkinChanger", Description = "SkinChanger is now DISABLED", Time = 3 })
+	end
+end
+
+local DeviceSpooferEnabled = false
+local CurrentDeviceType = "VR"
+
+local function ApplyDeviceSpoof()
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+	if ReplicatedStorage and ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("Replication") and ReplicatedStorage.Remotes.Replication:FindFirstChild("Fighter") then
+		ReplicatedStorage.Remotes.Replication.Fighter.SetControls:FireServer(CurrentDeviceType)
+		Library:Notify({ Title = "Device Spoofer", Description = "Applied " .. CurrentDeviceType .. " spoof.", Time = 2 })
+	else
+		Library:Notify({ Title = "Device Spoofer", Description = "Failed to find remote.", Time = 3 })
+	end
+end
+
+local BlurEffect = Instance.new("BlurEffect")
+BlurEffect.Size = 0
+BlurEffect.Parent = game:GetService("Lighting")
+
+local ColorCorrection = Instance.new("ColorCorrectionEffect")
+ColorCorrection.Parent = game:GetService("Lighting")
+
+local function UpdateBlur()
+	local enabled = Toggles.EnableBlur and Toggles.EnableBlur.Value or false
+	local strength = Options.BlurAmount and Options.BlurAmount.Value or 20
+	local glass = Options.GlassType and Options.GlassType.Value or "None"
+
+	if enabled then
+		BlurEffect.Size = (strength / 100) * 56
+		
+		if glass == "Dark Blur" then
+			ColorCorrection.Brightness = -0.15
+			ColorCorrection.Contrast = 0.1
+			ColorCorrection.Saturation = -0.3
+		elseif glass == "Light Blur" then
+			ColorCorrection.Brightness = 0.12
+			ColorCorrection.Contrast = -0.05
+			ColorCorrection.Saturation = 0.2
+		else
+			ColorCorrection.Brightness = 0
+			ColorCorrection.Contrast = 0
+			ColorCorrection.Saturation = 0
+		end
+	else
+		BlurEffect.Size = 0
+		ColorCorrection.Brightness = 0
+		ColorCorrection.Contrast = 0
+		ColorCorrection.Saturation = 0
+	end
+end
+
+-- ==================== COSMETICS TAB ====================
+
+local UnlockRarityGroup = Tabs.Cosmetics:AddLeftGroupbox("Unlock by Rarity", "award")
+
+UnlockRarityGroup:AddDropdown("CosmeticType", {
+	Text = "Cosmetic Type",
+	Values = {"Skin", "Weapon", "Other"},
+	Default = "Skin",
+})
+
+UnlockRarityGroup:AddDropdown("Rarity", {
+	Text = "Rarity",
+	Values = {"Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythical"},
+	Default = "Mythical",
+})
+
+UnlockRarityGroup:AddButton({
+	Text = "Unlock Selected Rarity",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "Unlocked selected rarity cosmetics.", Time = 3 })
+	end,
+})
+
+UnlockRarityGroup:AddButton({
+	Text = "Unlock All of Type",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "Unlocked all of selected type.", Time = 3 })
+	end,
+})
+
+local EquipGroup = Tabs.Cosmetics:AddLeftGroupbox("Equip", "package")
+
+EquipGroup:AddDropdown("EquipType", {
+	Text = "Type",
+	Values = {"Skins", "Weapons", "Accessories"},
+	Default = "Skins",
+})
+
+EquipGroup:AddDropdown("EquipWeapon", {
+	Text = "Weapon",
+	Values = {"Assault Rifle", "Pistol", "Sniper", "Shotgun", "All"},
+	Default = "Assault Rifle",
+})
+
+EquipGroup:AddDropdown("EquipCosmetic", {
+	Text = "Cosmetic",
+	Values = {"None", "Default", "Premium Skin", "Mythical"},
+	Default = "None",
+})
+
+EquipGroup:AddToggle("EquipInverted", {
+	Text = "Inverted",
+	Default = false,
+})
+
+EquipGroup:AddButton({
+	Text = "Apply",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "Cosmetic applied successfully.", Time = 3 })
+	end,
+})
+
+EquipGroup:AddButton({
+	Text = "Apply to ALL Weapons",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "Applied to all weapons.", Time = 3 })
+	end,
+})
+
+EquipGroup:AddButton({
+	Text = "Remove from ALL Weapons",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "Removed from all weapons.", Time = 3 })
+	end,
+})
+
+local ManageGroup = Tabs.Cosmetics:AddRightGroupbox("Manage", "settings")
+
+ManageGroup:AddDropdown("ManageCosmeticType", {
+	Text = "Cosmetic Type",
+	Values = {"Skin", "Weapon"},
+	Default = "Skin",
+})
+
+ManageGroup:AddInput("CosmeticName", {
+	Text = "Cosmetic Name",
+	Default = "e.g. Vexed",
+})
+
+ManageGroup:AddInput("WeaponName", {
+	Text = "Weapon Name",
+	Default = "e.g. Assault Rifle",
+})
+
+ManageGroup:AddButton({
+	Text = "Unlock Specific",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "Specific cosmetic unlocked.", Time = 3 })
+	end,
+})
+
+ManageGroup:AddButton({
+	Text = "Unlock for Weapon",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "Unlocked for weapon.", Time = 3 })
+	end,
+})
+
+ManageGroup:AddButton({
+	Text = "Lock for Weapon",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "Locked for weapon.", Time = 3 })
+	end,
+})
+
+ManageGroup:AddButton({
+	Text = "Unlock All for Weapon",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "All unlocked for weapon.", Time = 3 })
+	end,
+})
+
+ManageGroup:AddButton({
+	Text = "Lock All for Weapon",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "All locked for weapon.", Time = 3 })
+	end,
+})
+
+ManageGroup:AddButton({
+	Text = "Unlock All",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "All cosmetics unlocked.", Time = 3 })
+	end,
+})
+
+ManageGroup:AddButton({
+	Text = "Lock All",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "All cosmetics locked.", Time = 3 })
+	end,
+})
+
+ManageGroup:AddButton({
+	Text = "Unlock Random",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "Random cosmetics unlocked.", Time = 3 })
+	end,
+})
+
+ManageGroup:AddButton({
+	Text = "Lock Random",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "Random cosmetics locked.", Time = 3 })
+	end,
+})
+
+-- ==================== WEAPONS TAB ====================
+
+local WeaponSelectionGroup = Tabs.Weapons:AddLeftGroupbox("Weapon Selection", "crosshair")
+
+WeaponSelectionGroup:AddDropdown("PrimaryWeapon", {
+	Text = "Primary",
+	Values = {"None", "Assault Rifle", "SMG", "Sniper", "Shotgun"},
+	Default = "None",
+})
+
+WeaponSelectionGroup:AddDropdown("SecondaryWeapon", {
+	Text = "Secondary",
+	Values = {"None", "Pistol", "Revolver"},
+	Default = "None",
+})
+
+WeaponSelectionGroup:AddDropdown("MeleeWeapon", {
+	Text = "Melee",
+	Values = {"None", "Knife", "Axe"},
+	Default = "None",
+})
+
+WeaponSelectionGroup:AddDropdown("UtilityWeapon", {
+	Text = "Utility",
+	Values = {"None", "Grenade", "Flashbang"},
+	Default = "None",
+})
+
+local ShootSoundGroup = Tabs.Weapons:AddLeftGroupbox("Shoot Sound", "volume")
+
+ShootSoundGroup:AddDropdown("ShootSoundMode", {
+	Text = "Sound",
+	Values = {"None", "Custom"},
+	Default = "None",
+})
+
+ShootSoundGroup:AddInput("ShootAssetID", {
+	Text = "Asset ID",
+	Default = "",
+	Placeholder = "rbxassetid://...",
+})
+
+ShootSoundGroup:AddInput("ShootURL", {
+	Text = "URL",
+	Default = "",
+	Placeholder = "https://example.com/sound.ogg",
+})
+
+ShootSoundGroup:AddButton({
+	Text = "Preview",
+	Func = function()
+		Library:Notify({ Title = "Preview", Description = "Playing shoot sound preview...", Time = 2 })
+	end,
+})
+
+local OptionsGroup = Tabs.Weapons:AddRightGroupbox("Options", "list")
+
+OptionsGroup:AddDropdown("UnlockMode", {
+	Text = "Unlock Mode",
+	Values = {"All", "Primary Only", "Secondary Only", "Melee Only"},
+	Default = "All",
+})
+
+OptionsGroup:AddButton({
+	Text = "Select All Primary",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "All primary weapons selected.", Time = 2 })
+	end,
+})
+
+OptionsGroup:AddButton({
+	Text = "Select All Secondary",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "All secondary weapons selected.", Time = 2 })
+	end,
+})
+
+OptionsGroup:AddButton({
+	Text = "Select All Melee",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "All melee weapons selected.", Time = 2 })
+	end,
+})
+
+OptionsGroup:AddButton({
+	Text = "Select All Utility",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "All utility selected.", Time = 2 })
+	end,
+})
+
+OptionsGroup:AddButton({
+	Text = "Clear All",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "All selections cleared.", Time = 2 })
+	end,
+})
+
+local HitSoundGroup = Tabs.Weapons:AddRightGroupbox("Hit Sound", "volume-2")
+
+HitSoundGroup:AddDropdown("HitSoundMode", {
+	Text = "Mode",
+	Values = {"Off", "On"},
+	Default = "Off",
+})
+
+HitSoundGroup:AddDropdown("HitSoundType", {
+	Text = "Sound",
+	Values = {"None", "Custom"},
+	Default = "None",
+})
+
+HitSoundGroup:AddInput("HitAssetID", {
+	Text = "Asset ID",
+	Default = "",
+	Placeholder = "rbxassetid://...",
+})
+
+HitSoundGroup:AddInput("HitURL", {
+	Text = "URL",
+	Default = "",
+	Placeholder = "https://example.com/hit.ogg",
+})
+
+HitSoundGroup:AddButton({
+	Text = "Preview",
+	Func = function()
+		Library:Notify({ Title = "Preview", Description = "Playing hit sound preview...", Time = 2 })
+	end,
+})
+
+local KillSoundGroup = Tabs.Weapons:AddLeftGroupbox("Kill Sound", "trophy")
+
+KillSoundGroup:AddDropdown("KillSoundMode", {
+	Text = "Sound",
+	Values = {"None", "Custom"},
+	Default = "None",
+})
+
+KillSoundGroup:AddInput("KillAssetID", {
+	Text = "Asset ID",
+	Default = "",
+	Placeholder = "rbxassetid://...",
+})
+
+KillSoundGroup:AddInput("KillURL", {
+	Text = "URL",
+	Default = "",
+	Placeholder = "https://example.com/kill.ogg",
+})
+
+KillSoundGroup:AddButton({
+	Text = "Preview",
+	Func = function()
+		Library:Notify({ Title = "Preview", Description = "Playing kill sound preview...", Time = 2 })
+	end,
+})
+
+-- ==================== INVENTORY TAB ====================
+
+local SingleGroup = Tabs.Inventory:AddLeftGroupbox("Single", "package")
+
+SingleGroup:AddDropdown("CaseType", {
+	Text = "Case / Box",
+	Values = {"Skin Case", "Weapon Case", "Other"},
+	Default = "Skin Case",
+})
+
+SingleGroup:AddSlider("Quantity", {
+	Text = "Quantity",
+	Default = 1,
+	Min = 1,
+	Max = 99,
+	Rounding = 0,
+})
+
+SingleGroup:AddDropdown("ForWeapon", {
+	Text = "For Weapon",
+	Values = {"None", "Assault Rifle", "Pistol", "All"},
+	Default = "None",
+})
+
+SingleGroup:AddButton({
+	Text = "New Entry",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "New entry created.", Time = 2 })
+	end,
+})
+
+SingleGroup:AddButton({
+	Text = "Add to Backpack",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "Item added to backpack.", Time = 3 })
+	end,
+})
+
+local BulkGroup = Tabs.Inventory:AddLeftGroupbox("Bulk", "layers")
+
+BulkGroup:AddButton({
+	Text = "Bulk Add",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "Bulk operation completed.", Time = 3 })
+	end,
+})
+
+local DeleteGroup = Tabs.Inventory:AddLeftGroupbox("Delete", "trash-2")
+
+DeleteGroup:AddButton({
+	Text = "Delete Selected",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "Selected items deleted.", Time = 3 })
+	end,
+})
+
+local InjectGroup = Tabs.Inventory:AddRightGroupbox("Inject", "injection")
+
+InjectGroup:AddDropdown("InjectType", {
+	Text = "Type",
+	Values = {"Skin", "Weapon", "Accessory"},
+	Default = "Skin",
+})
+
+InjectGroup:AddDropdown("InjectForWeapon", {
+	Text = "For Weapon",
+	Values = {"Universal", "Specific"},
+	Default = "Universal",
+})
+
+InjectGroup:AddDropdown("InjectCosmetic", {
+	Text = "Cosmetic",
+	Values = {"188 Visitis", "Other"},
+	Default = "188 Visitis",
+})
+
+InjectGroup:AddToggle("StackDuplicates", {
+	Text = "Stack duplicates",
+	Default = false,
+})
+
+InjectGroup:AddButton({
+	Text = "Inject into Backpack",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "Injected into backpack.", Time = 3 })
+	end,
+})
+
+-- ==================== WORLD TAB ====================
+
+local CameraGroup = Tabs.World:AddLeftGroupbox("Camera", "camera")
+
+CameraGroup:AddToggle("StretchedResolution", {
+	Text = "Stretched Resolution",
+	Default = false,
+})
+
+CameraGroup:AddSlider("FOV", {
+	Text = "FOV",
+	Default = 90,
+	Min = 60,
+	Max = 120,
+	Rounding = 0,
+})
+
+local VisualsGroup = Tabs.World:AddLeftGroupbox("Visuals", "eye")
+
+VisualsGroup:AddToggle("NoHands", {
+	Text = "No Hands",
+	Default = false,
+})
+
+local CustomSkyGroup = Tabs.World:AddRightGroupbox("Custom Sky", "cloud")
+
+CustomSkyGroup:AddDropdown("SkySelection", {
+	Text = "Sky Selection",
+	Values = {"None", "Default", "Night", "Sunset", "Custom"},
+	Default = "None",
+})
+
+CustomSkyGroup:AddButton({
+	Text = "Restore Default",
+	Func = function()
+		Library:Notify({ Title = "Success", Description = "Sky restored to default.", Time = 3 })
+	end,
+})
+
+-- ==================== SPOOFER TAB ====================
+
+local PlatformSpoofGroup = Tabs.Spoofer:AddLeftGroupbox("", "settings")
+
+PlatformSpoofGroup:AddToggle("EnablePlatformSpoof", {
+	Text = "Enable Platform Spoof",
+	Default = false,
+})
+
+local EloGroup = Tabs.Spoofer:AddLeftGroupbox("ELO & Rank Spoofer", "trophy")
+
+EloGroup:AddInput("ELORating", {
+	Text = "ELO Rating",
+	Default = "30000",
+})
+
+EloGroup:AddToggle("EnableELOSpoof", {
+	Text = "Enable ELO Spoof",
+	Default = true,
+})
+
+EloGroup:AddInput("CharmELO", {
+	Text = "Charm ELO",
+	Default = "30000",
+})
+
+EloGroup:AddInput("CharmTopRank", {
+	Text = "Charm Top Rank",
+	Default = "1",
+})
+
+EloGroup:AddToggle("EnableSeasonCharmSpoof", {
+	Text = "Enable Season Charm Spoof",
+	Default = false,
+})
+
+local LeaderboardGroup = Tabs.Spoofer:AddLeftGroupbox("Leaderboard Spoofer", "bar-chart-3")
+
+LeaderboardGroup:AddInput("LeaderboardELO", {
+	Text = "ELO",
+	Default = "0",
+})
+
+LeaderboardGroup:AddToggle("SpoofELO", {
+	Text = "Spoof ELO",
+	Default = false,
+})
+
+LeaderboardGroup:AddInput("Streak", {
+	Text = "Streak",
+	Default = "0",
+})
+
+LeaderboardGroup:AddToggle("SpoofStreak", {
+	Text = "Spoof Streak",
+	Default = true,
+})
+
+LeaderboardGroup:AddInput("Kills", {
+	Text = "Kills",
+	Default = "1000",
+})
+
+local DisplayGroup = Tabs.Spoofer:AddRightGroupbox("Display Name", "user")
+
+DisplayGroup:AddInput("DisplayName", {
+	Text = "Display Name",
+	Default = "Roblox",
+})
+
+DisplayGroup:AddInput("UserID", {
+	Text = "User ID",
+	Default = "123",
+})
+
+DisplayGroup:AddInput("Level", {
+	Text = "Level",
+	Default = "412",
+})
+
+DisplayGroup:AddInput("WinStreak", {
+	Text = "Win Streak",
+	Default = "10000",
+})
+
+DisplayGroup:AddInput("DisplayELO", {
+	Text = "ELO",
+	Default = "",
+})
+
+DisplayGroup:AddToggle("AnonymousMode", {
+	Text = "Enable Anonymous Mode",
+	Default = false,
+})
+
+local ResourceGroup = Tabs.Spoofer:AddRightGroupbox("Resource Spoofer", "coins")
+
+ResourceGroup:AddInput("KeysAmount", {
+	Text = "Keys Amount",
+	Default = "100000",
+})
+
+ResourceGroup:AddToggle("EnableKeysAmount", {
+	Text = "Enable Keys Amount",
+	Default = true,
+})
+
+ResourceGroup:AddInput("TokensAmount", {
+	Text = "Tokens Amount",
+	Default = "0",
+})
+
+ResourceGroup:AddToggle("EnableTokensAmount", {
+	Text = "Enable Tokens Amount",
+	Default = false,
+})
+
+ResourceGroup:AddInput("EventCurrency", {
+	Text = "Event Currency",
+	Default = "0",
+})
+
+ResourceGroup:AddToggle("EnableEventCurrency", {
+	Text = "Enable Event Currency",
+	Default = false,
+})
+
+local PingGroup = Tabs.Spoofer:AddLeftGroupbox("Ping Spoofer", "wifi")
+
+PingGroup:AddDropdown("PingMode", {
+	Text = "Ping Mode",
+	Values = {"Static", "Random"},
+	Default = "Static",
+})
+
+PingGroup:AddInput("PingValue", {
+	Text = "Ping Value",
+	Default = "20",
+})
+
+PingGroup:AddInput("RandomMinPing", {
+	Text = "Random Min",
+	Default = "1",
+})
+
+PingGroup:AddInput("RandomMaxPing", {
+	Text = "Random Max",
+	Default = "100",
+})
+
+PingGroup:AddToggle("EnablePingSpoof", {
+	Text = "Enable Ping Spoof",
+	Default = false,
+})
+
+local FPSGroup = Tabs.Spoofer:AddLeftGroupbox("FPS Spoofer", "monitor")
+
+FPSGroup:AddDropdown("FPSMode", {
+	Text = "FPS Mode",
+	Values = {"Static", "Random"},
+	Default = "Static",
+})
+
+FPSGroup:AddInput("FPSValue", {
+	Text = "FPS Value",
+	Default = "60",
+})
+
+FPSGroup:AddInput("RandomMinFPS", {
+	Text = "Random Min",
+	Default = "1",
+})
+
+FPSGroup:AddInput("RandomMaxFPS", {
+	Text = "Random Max",
+	Default = "240",
+})
+
+FPSGroup:AddToggle("EnableFPSSpoof", {
+	Text = "Enable FPS Spoof",
+	Default = false,
+})
+
+local UsernameGroup = Tabs.Spoofer:AddRightGroupbox("Username Spoofer", "user")
+
+UsernameGroup:AddInput("SpoofUsername", {
+	Text = "Username",
+	Default = "top-floor.cc",
+})
+
+UsernameGroup:AddInput("SpoofDisplayName", {
+	Text = "Display Name",
+	Default = "top-floor.cc",
+})
+
+UsernameGroup:AddToggle("EnableUsernameSpoof", {
+	Text = "Enable Username Spoof",
+	Default = false,
+})
+
+local AvatarGroup = Tabs.Spoofer:AddRightGroupbox("Avatar Spoofer", "user-round")
+
+AvatarGroup:AddInput("AvatarUserID", {
+	Text = "User ID",
+	Default = "0",
+})
+
+AvatarGroup:AddToggle("EnableAvatarSpoof", {
+	Text = "Enable Avatar Spoof",
+	Default = false,
+})
+
+local BadgeGroup = Tabs.Spoofer:AddRightGroupbox("Badge Spoofer", "award")
+
+BadgeGroup:AddToggle("PremiumBadge", {
+	Text = "Premium Badge",
+	Default = false,
+})
+
+BadgeGroup:AddToggle("RobloxVerified", {
+	Text = "Roblox Verified",
+	Default = false,
+})
+
+BadgeGroup:AddToggle("NosniyGamesTeam", {
+	Text = "Nosniy Games Team",
+	Default = false,
+})
+
+BadgeGroup:AddToggle("RobloxAdmin", {
+	Text = "Roblox Admin",
+	Default = false,
+})
+
+BadgeGroup:AddToggle("InfluencerBadge", {
+	Text = "Influencer Badge",
+	Default = false,
+})
+
+local PassGroup = Tabs.Spoofer:AddRightGroupbox("Pass Spoofer", "ticket")
+
+PassGroup:AddToggle("EnablePassSpoof", {
+	Text = "Enable Pass Spoof",
+	Default = false,
+})
+
+local DeviceGroup = Tabs.Spoofer:AddRightGroupbox("Device Spoofer", "monitor")
+
+DeviceGroup:AddDropdown("DeviceType", {
+	Text = "Device Type",
+	Values = {"VR", "Touch", "Gamepad", "MouseKeyboard"},
+	Default = "VR",
+	Callback = function(Value)
+		CurrentDeviceType = Value
+		if DeviceSpooferEnabled then
+			ApplyDeviceSpoof()
+		end
+	end,
+})
+
+DeviceGroup:AddToggle("EnableDeviceSpoof", {
+	Text = "Enable Device Spoof",
+	Default = false,
+	Callback = function(Value)
+		DeviceSpooferEnabled = Value
+		if Value then
+			ApplyDeviceSpoof()
+		end
+	end,
+})
+
+-- ==================== GENERAL SECTION ====================
+local GeneralGroup = Tabs.Settings:AddLeftGroupbox("General", "settings")
+
+GeneralGroup:AddToggle("UnlockUnobtainable", {
+	Text = "Unlock Unobtainable",
+	Default = false,
+	Tooltip = "Enable skinchanger and unlock features",
+	Callback = function(Value)
+		SkinChangerEnabled = Value
+		UpdateSkinChangerState()
+	end,
+})
+
+GeneralGroup:AddDivider()
+
+GeneralGroup:AddButton({
+	Text = "Unlock Everything",
+	Func = function()
+		Toggles.UnlockUnobtainable:SetValue(true)
+		Library:Notify({ Title = "Success", Description = "SkinChanger Activated!\nAll skins unlocked.", Time = 4 })
+	end,
+	Risky = false,
+})
+
+GeneralGroup:AddDivider()
+
+GeneralGroup:AddButton({
+	Text = "Lock Everything",
+	Func = function()
+		Toggles.UnlockUnobtainable:SetValue(false)
+		Library:Notify({ Title = "Success", Description = "SkinChanger Disabled.\nSkins will revert on next toggle.", Time = 4 })
+	end,
+	Risky = false,
+})
+
+-- ==================== UI EFFECTS SECTION ====================
+local UIEffectsGroup = Tabs.Settings:AddLeftGroupbox("UI Effects", "effects")
+
+UIEffectsGroup:AddToggle("EnableBlur", {
+	Text = "Enable Blur",
+	Default = false,
+	Callback = function()
+		UpdateBlur()
+	end,
+})
+
+UIEffectsGroup:AddSlider("BlurAmount", {
+	Text = "Blur Strength (%)",
+	Default = 20,
+	Min = 1,
+	Max = 100,
+	Rounding = 0,
+	Callback = function()
+		UpdateBlur()
+	end,
+})
+
+UIEffectsGroup:AddDropdown("GlassType", {
+	Text = "Glass Type",
+	Values = { "None", "Normal Blur", "Dark Blur", "Light Blur" },
+	Default = 1,
+	Callback = function()
+		UpdateBlur()
+	end,
+})
+
+-- ==================== MENU GROUP ====================
+local MenuGroup = Tabs.Settings:AddRightGroupbox("Menu", "wrench")
+
+MenuGroup:AddToggle("SilentExecute", {
+	Text = "Silent Execute",
+	Default = false,
+})
+
+MenuGroup:AddToggle("NoNotifications", {
+	Text = "No Notifications",
+	Default = false,
+	Callback = function(Value)
+		Library:SetNotifyEnabled(not Value)
+	end,
+})
+
+MenuGroup:AddToggle("AutoExecute", {
+	Text = "Auto Execute",
+	Default = false,
+})
+
+MenuGroup:AddToggle("YabujinSyncCosmetics", {
+	Text = "Yabujin Sync Cosmetics",
+	Default = false,
+})
+
+MenuGroup:AddToggle("YabujinSyncSpoofer", {
+	Text = "Yabujin Sync Spoofer",
+	Default = false,
+})
+
+MenuGroup:AddDivider()
+
+MenuGroup:AddToggle("KeybindMenuOpen", {
+	Default = Library.KeybindFrame.Visible,
+	Text = "Open Keybind Menu",
+	Callback = function(value)
+		Library.KeybindFrame.Visible = value
+	end,
+})
+
+MenuGroup:AddToggle("ShowCustomCursor", {
+	Text = "Custom Cursor",
+	Default = true,
+	Callback = function(Value)
+		Library.ShowCustomCursor = Value
+	end,
+})
+
+MenuGroup:AddDropdown("NotificationSide", {
+	Values = { "Left", "Right" },
+	Default = "Right",
+	Text = "Notification Side",
+	Callback = function(Value)
+		Library:SetNotifySide(Value)
+	end,
+})
+
+MenuGroup:AddDropdown("DPIDropdown", {
+	Values = { "50%", "75%", "100%", "125%", "150%", "175%", "200%" },
+	Default = "100%",
+	Text = "DPI Scale",
+	Callback = function(Value)
+		Value = Value:gsub("%%", "")
+		Library:SetDPIScale(tonumber(Value))
+	end,
+})
+
+MenuGroup:AddDivider()
+MenuGroup:AddLabel("Menu bind")
+	:AddKeyPicker("MenuKeybind", { Default = "RightShift", NoUI = true, Text = "Menu keybind" })
+
+MenuGroup:AddButton({
+	Text = "Unload",
+	Func = function()
+		BlurEffect:Destroy()
+		ColorCorrection:Destroy()
+		Library:Unload()
+	end,
+	Risky = false,
+})
+
+Library.ToggleKeybind = Options.MenuKeybind
+
+ThemeManager:SetLibrary(Library)
+SaveManager:SetLibrary(Library)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({ "MenuKeybind" })
+
+ThemeManager:SetFolder("MyScriptHub")
+SaveManager:SetFolder("MyScriptHub/specific-game")
+
+SaveManager:BuildConfigSection(Tabs.Settings)
+ThemeManager:ApplyToTab(Tabs.Settings)
+
+SaveManager:LoadAutoloadConfig()
+
+Library:OnUnload(function()
+	BlurEffect:Destroy()
+	ColorCorrection:Destroy()
+	print("Unloaded!")
+end)
+
+task.spawn(UpdateBlur)
